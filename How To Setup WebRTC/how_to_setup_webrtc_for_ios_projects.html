@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>How To Setup WebRTC for iOS projects</h1>
+<h2>Steps to Setup </h2>
+<h3>Prerequisite Software <h3>
+	<h2> Depot Tools </h2>
+	<hr>
+	<ol type="1">
+	  <li>You'll need to have the depot tools installed: <br><br> <a href="http://dev.chromium.org/developers/how-tos/install-depot-tools">http://dev.chromium.org/developers/how-tos/install-depot-tools</a>
+		<br><br></li>
+	  <li>Git: On Windows it will install a special version of Git automatically on the first sync. On Mac and Linux, you'll need to install Git by yourself (<a href="http://git-scm.com">http://git-scm.com</a>)</li>
+	</ol>
+	<br>
+	<h2> Linux (Ubuntu/Debian) </h2>
+	<hr>
+	<p>This, and more, is described on the Chromium site: <br>
+	<a href="https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md<">https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md</a></p>
+		<br>
+		<h2> Windows </h2>
+		<hr>
+		<p>Follow Chromium's build instructions at <a href="http://www.chromium.org/developers/how-tos/build-instructions-windows.">http://www.chromium.org/developers/how-tos/build-instructions-windows. </a></p>
+		
+		<h2> OS X </h2>
+		<hr>
+		<p>Xcode 3.0 or higher</p>
+		
+		
+		<h2>Android </h2>
+		<hr>
+		<p>These instructions are tested on a Linux development machine. In WebRTC, we're using the same Android toolchain as Chrome (the one that is downloaded into third_party/android_tools). You don't need to install NDK/SDK separately.</p>
+		<br>
+		<ol type="1">
+		  <li>Install <a href="https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions_prerequisites.md">Chrome's Linux prerequisites</a></li>
+		<br>
+		  <li>Install <a href="http://dev.chromium.org/developers/how-tos/install-depot-tools">depot_tools</a></li>
+		<br>
+		  <li>Install Java OpenJDK as described at <a href="https://www.chromium.org/developers/how-tos/android-build-instructions">Android prerequisites</a></li><br>
+		</ol>
+		
+			<h1>Set up for iOS </h1>
+			<h2>Development Environment</h2>
+			<hr>
+			<p>An OS X machine is required for iOS development. While it's possible to develop purely from the command line with text editors, it's easiest to use Xcode. Both methods will be illustrated here.</p>
+			
+			
+			<ol type="1">
+			  <li>Install <a href="https://webrtc.org/native-code/development/prerequisite-sw/">prerequisite software</a></li>
+			<br>
+			  <li>Set the target OS in your environment: <br> <code>export GYP_DEFINES="OS=ios" </code></li>
+			<br>
+			  <li>Create a working directory, enter it, and run: <br><code>fetch --nohooks webrtc_ios <br>
+			gclient sync</code><br><br>This will fetch a regular WebRTC checkout with the iOS-specific parts added. The same checkout can be used for both Mac and iOS development, depending on the OS you set in GYP_DEFINES (see above).</li><br>
+			<li>You may want to disable Spotlight indexing for the checkout to speed up file operations..</li>
+			</ol>
+			<p>See <a href="https://webrtc.org/native-code/development/">Development</a> for generic instructions on how to update the code in your checkout.</p>
+			
+			
+<h2>Compiling the Code</h2>
+<hr>
+<p>GYP is used to generate build instructions for ninja from the relevant .gyp files. Ninja is used to compile the source using the previously generated instructions. In order to configure GYP to generate build files for iOS certain environment variables need to be set. Those variables can be edited for the various build configurations as needed.</p>
+<br>
+<p>Building for iOS Device:</p>
+<code>export GYP_DEFINES="OS=ios target_arch=arm"	<br>
+export GYP_GENERATOR_FLAGS="output_dir=out_ios"</code>
+<br>
+
+<p>Building for 64-bit iOS device:</p>
+<code>export GYP_DEFINES="OS=ios target_arch=arm64"	<br>
+export GYP_GENERATOR_FLAGS="output_dir=out_ios64"</code>
+<br>
+
+<p>Building for Simulator:</p>
+<code>export GYP_DEFINES="OS=ios target_arch=ia32"	<br>
+export GYP_GENERATOR_FLAGS="output_dir=out_sim"</code>
+<br>
+
+
+<p>Building for 64-bit Simulator:</p>
+<code>export GYP_DEFINES="OS=ios target_arch=x64"	<br>
+export GYP_GENERATOR_FLAGS="output_dir=out_sim"</code>
+<br>
+
+
+<p>Building for OSX:</p>
+<code>export GYP_DEFINES="OS=mac target_arch=x64"	<br>
+export GYP_GENERATOR_FLAGS="output_dir=out_mac"</code>
+<br>
+<p>Note that you can set output_dir to whatever you'd like. It will be created under src/. Now run the gyp generator script from the source root (<working directory>/src):</p><br>
+	<code> webrtc/build/gyp_webrtc</code>
+	<br>
+	<p>Now to compile, just run ninja on the appropriate target. For example:</p>
+	<code>ninja -C out_ios/Debug-iphoneos AppRTCDemo	<br>
+	ninja -C out_ios/Release-iphoneos AppRTCDemo	<br>
+	ninja -C out_sim/Debug-iphonesimulator AppRTCDemo</code>
+		
+		<p>For interesting targets to build, see the .gyp files in webrtc/webrtc.gyp, webrtc/webrtc_examples.gyp, talk/libjingle.gyp, talk/libjingle_examples.gyp.</p>
+		<p>Some sample scripts are also available at <a href="https://code.google.com/p/chromium/codesearch#chromium/src/third_party/libjingle/source/talk/app/webrtc/objc/README">talk/app/webrtc/objc/README.</a></p><br>
+		
+		<h2>Compiling with Xcode</h2>
+		<hr>
+		
+		<p>Compiling with Xcode is not supported! What we do instead is compile using a script that runs ninja from Xcode. In order to generate the relevant Xcode project, add xcode-ninja to GYP_GENERATORS along with the targets you’re interested in. By using Xcode in this manner, we get the build speed of ninja while at the same time getting access to the usual methods of deployment/debugging for iOS.</p>
+		<code>export GYP_GENERATOR_FLAGS="xcode_project_version=3.2 xcode_ninja_target_pattern=All_iOS xcode_ninja_executable_target_pattern=AppRTCDemo|libjingle_peerconnection_unittest|libjingle_peerconnection_objc_test output_dir=out_ios" <br><br>
+
+		export GYP_GENERATORS="ninja,xcode-ninja"</code>
+		
+		<p>When running the generator script, you should see an all.ninja.xcworkspace file. You should be able to select the desired target and platform in the Xcode usual fashion and build/deploy. Note that you will need to rerun the GYP generator if you want to switch target platforms.</p><br>
+		
+		<h2>Deploying to Device</h2>
+		<hr>
+		<p>It's easiest to deploy to a device using Xcode in xcode-ninja mode. Other command line tools exist as well, e.g. ios-deploy.</p>
+		
+		</br>
+		
+		<h1>Other way to compile WebRTC for iOS </1>
+		<h2>Compile with Shell Script</h2>
+		<hr>
+		<h3> Steps to follow </h3>
+			
+			<ol type="1">
+			  <li><p><b>Create a working directory</b><br>Make a new directory somewhere,  and get ready because you're going to need in the ballpark of 8 GB of free space</p></li>
+			  <li>Download the Chromium depot tools. <br>Switch into your working directory and grab the Chromium depot_tools repository with git:<br>Follow Depot Tools steps given at the top.</li>
+			  <li><p><b>Download the WebRTC source</b> <br> Back in your working directory, use the next few commands to download the massive source repository:</p><code>fetch --nohooks webrtc_ios <br>
+			gclient sync</code></li>
+			</ol>
+			
+			<h2>Building and running on the iOS 7/8 simulator</h2>
+			<hr>
+		<p>First, at the top level of your working directory create a new shell script file to kickoff the build:</p><code>	touch build_apprtc.sh <br>
+			chmod +x build_apprtc.sh</code>
+			
+			<p>Copy the content from <a href="https://github.com/kurhadep/WebRTCDemo/blob/master/How%20To%20Setup%20WebRTC/build_apprtc.sh">this shell script</a> and past it to your build_apprtc.sh. Using this shell script you can generate static libraries for Simulator and Device.</p><br>
+			
+			<p>This script contains a few functions that allow you to build the AppRTC example app for a few different purposes. First, build the source code and example application by running the script with the following parameter:</p>
+			<code>./build_apprtc.sh build_iossim</code>
+			
+			<br>
+			
+			<p> I have also added the AppRTC demo application to GitHub for reference. Find link <a href="https://github.com/kurhadep/WebRTCDemo/tree/master/WebRTCDemo">here</a></p>
+			<br>
+			<h2>Reference Links</h2>
+			<hr>
+			<ul>
+			  <li><a href="https://webrtc.org/native-code/ios/#">https://webrtc.org/native-code/ios/#</a></li>
+			  <li><a href="http://ninjanetic.com/how-to-get-started-with-webrtc-and-ios-without-wasting-10-hours-of-your-life/">http://ninjanetic.com/how-to-get-started-with-webrtc-and-ios-without-wasting-10-hours-of-your-life/</a></li>
+			  <li><a href="https://webrtc.org/native-code/development/prerequisite-sw/">https://webrtc.org/native-code/development/prerequisite-sw/</a></li>
+			</ul>
+
+				
+		
